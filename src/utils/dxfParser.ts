@@ -95,7 +95,7 @@ export async function parseDxfFile(file: File): Promise<{ entities: DxfEntity[],
 
                 if (dxf.header && dxf.header.$INSUNITS !== undefined) {
                     const unitCode = dxf.header.$INSUNITS;
-                    const unitInfo = DXF_UNITS[unitCode];
+                    const unitInfo = DXF_UNITS[unitCode as number];
 
                     if (unitInfo) {
                         scaleFactor = unitInfo.toMeters;

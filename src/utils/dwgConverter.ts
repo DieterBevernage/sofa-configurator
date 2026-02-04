@@ -13,7 +13,6 @@
  */
 
 import { DWG_CONVERSION_ENABLED, MAX_DWG_FILE_SIZE } from '../config/dwgConversion';
-import DxfParser from 'dxf-parser';
 
 interface ConversionResult {
     success: boolean;
@@ -65,7 +64,6 @@ export async function convertDwgToDxf(file: File): Promise<ConversionResult> {
 
             return {
                 success: false,
-                error: null,
                 needsManualConversion: true
             };
         } else {
