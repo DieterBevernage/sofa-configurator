@@ -1,4 +1,4 @@
-import { Face } from 'dxf-writer';
+//import { Face } from 'dxf-writer';
 import { withBase } from '../utils/assetPaths';
 
 export const GRASS_CONFIG = {
