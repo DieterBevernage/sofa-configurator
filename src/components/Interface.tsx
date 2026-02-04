@@ -216,6 +216,7 @@ export const Interface = () => {
                             <>
                                 <DraggableItem variant="tree" label="Boom" />
                                 <DraggableItem variant="human" label="Persoon" />
+                                <DraggableItem variant="lamp" label="Lantaarn" />
                             </>
                         )}
                     </div>

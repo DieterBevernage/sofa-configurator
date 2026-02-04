@@ -1,4 +1,4 @@
-export type BenchVariant = 'standard' | 'backrest' | 'planter' | 'solar' | 'SF-S1' | 'SF-S2' | 'tree' | 'human';
+export type BenchVariant = 'standard' | 'backrest' | 'planter' | 'solar' | 'SF-S1' | 'SF-S2' | 'tree' | 'human' | 'lamp';
 export type BenchColor = 'Groen' | 'Rood' | 'Grijs' | 'Zwart' | 'Wit' | 'Lichtgrijs' | 'Beige';
 export type BenchFinish = 'glad' | 'gezuurd' | 'uitgewassen';
 

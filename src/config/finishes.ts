@@ -1,4 +1,5 @@
 import type { BenchFinish } from '../types';
+import { withBase } from '../utils/assetPaths';
 
 export interface FinishDefinition {
     id: BenchFinish;
@@ -15,7 +16,7 @@ export const FINISHES: Record<BenchFinish, FinishDefinition> = {
     'glad': {
         id: 'glad',
         label: 'Glad',
-        bumpMapPath: '/Finishes/glad_bump.png',
+        bumpMapPath: withBase('Finishes/glad_bump.png'),
         bumpIntensity: 0.01,
         tileSizeMeters: 0.5,
         roughness: 0.3,
@@ -25,7 +26,7 @@ export const FINISHES: Record<BenchFinish, FinishDefinition> = {
     'gezuurd': {
         id: 'gezuurd',
         label: 'Gezuurd',
-        bumpMapPath: '/Finishes/gezuurd_bump.png',
+        bumpMapPath: withBase('Finishes/gezuurd_bump.png'),
         bumpIntensity: 0.1,
         tileSizeMeters: 0.15,
         roughness: 0.8,
@@ -35,7 +36,7 @@ export const FINISHES: Record<BenchFinish, FinishDefinition> = {
     'uitgewassen': {
         id: 'uitgewassen',
         label: 'Uitgewassen',
-        bumpMapPath: '/Finishes/uitgewassen_bump.png',
+        bumpMapPath: withBase('Finishes/uitgewassen_bump.png'),
         bumpIntensity: 0.1,
         tileSizeMeters: 0.20,
         roughness: 0.8,

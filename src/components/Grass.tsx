@@ -86,6 +86,7 @@ export function Grass({ radius = GRASS_CONFIG.radius }) {
     const quantity = Math.floor(GRASS_CONFIG.quantity * quality.grass.densityFactor);
 
     const meshRef = useRef<THREE.InstancedMesh>(null);
+    const groundRef = useRef<THREE.Mesh>(null);
     const groundTexture = useTexture(GRASS_CONFIG.groundTexturePath);
     groundTexture.wrapS = groundTexture.wrapT = THREE.RepeatWrapping;
 
@@ -245,7 +246,13 @@ export function Grass({ radius = GRASS_CONFIG.radius }) {
     return (
         <group>
             {/* Ground Texture Plane */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.001, 0]} receiveShadow material={groundMaterial}>
+            <mesh
+                ref={groundRef}
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[0, 0.001, 0]}
+                receiveShadow
+                material={groundMaterial}
+            >
                 <circleGeometry args={[radius, 32]} />
             </mesh>
 

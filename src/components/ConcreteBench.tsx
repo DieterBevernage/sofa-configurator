@@ -1,11 +1,13 @@
-import { useMemo, useEffect, Suspense } from 'react';
+import { useMemo, useEffect, useRef, Suspense } from 'react';
 import type { BenchProps, BenchFinish } from '../types';
 import { Box, useGLTF, useTexture } from '@react-three/drei';
 import { useConfiguratorStore } from '../store/useConfiguratorStore';
 import * as THREE from 'three';
 import { getProduct } from '../config/products';
 import { getFinish } from '../config/finishes';
+import { withBase } from '../utils/assetPaths';
 import { QUALITY_CONFIG } from '../config/quality';
+import { LIGHTING_CONFIG } from '../config/lighting';
 
 function GenericModel({ path, color, finish, isColliding }: { path: string, color: string, finish: BenchFinish, isColliding?: boolean }) {
     const { scene } = useGLTF(path);
@@ -17,7 +19,7 @@ function GenericModel({ path, color, finish, isColliding }: { path: string, colo
     const hasBump = quality.materials.useFinishBump;
     const bumpRate = quality.materials.finishBumpMultiplier;
 
-    const bumpMap = useTexture(finishConfig?.bumpMapPath || '/Finishes/glad_bump.png');
+    const bumpMap = useTexture(finishConfig?.bumpMapPath || withBase('Finishes/glad_bump.png'));
 
     // Setup texture
     useEffect(() => {
@@ -37,12 +39,14 @@ function GenericModel({ path, color, finish, isColliding }: { path: string, colo
 
     const clonedScene = useMemo(() => {
         const s = scene.clone();
+        const lampLayer = LIGHTING_CONFIG.lamp.layer;
         s.traverse((child) => {
             if ((child as THREE.Mesh).isMesh) {
                 const m = child as THREE.Mesh;
                 m.castShadow = true;
                 m.receiveShadow = true;
             }
+            child.layers.enable(lampLayer);
         });
         return s;
     }, [scene]);
@@ -128,6 +132,7 @@ export const ConcreteBench = ({
     const setIsRotating = useConfiguratorStore((state) => state.setIsRotating);
     const isRotating = useConfiguratorStore((state) => state.isRotating);
     const draggingId = useConfiguratorStore((state) => state.draggingId);
+    const groupRef = useRef<THREE.Group>(null);
 
     const color = props.color || 'Grijs';
     const isColliding = props.isColliding;
@@ -161,6 +166,15 @@ export const ConcreteBench = ({
             bumpMap.needsUpdate = true;
         }
     }, [bumpMap, width, depth, finishConfig.tileSizeMeters, triplanarEnabled]);
+
+    useEffect(() => {
+        const lampLayer = LIGHTING_CONFIG.lamp.layer;
+        if (groupRef.current) {
+            groupRef.current.traverse((child) => {
+                child.layers.enable(lampLayer);
+            });
+        }
+    }, []);
 
     const concreteMaterial = useMemo(() => {
         const mat = new THREE.MeshStandardMaterial({
@@ -240,6 +254,7 @@ export const ConcreteBench = ({
 
     return (
         <group
+            ref={groupRef}
             position={position}
             rotation={rotation}
             onClick={(e) => {

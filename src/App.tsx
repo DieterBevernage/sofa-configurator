@@ -102,7 +102,7 @@ function InteractionManager() {
 
         addModule({
           id: Math.random().toString(36).substr(2, 9),
-          type: (pendingDrop.variant === 'tree' || pendingDrop.variant === 'human') ? 'environment' : 'bench',
+          type: (pendingDrop.variant === 'tree' || pendingDrop.variant === 'human' || pendingDrop.variant === 'lamp') ? 'environment' : 'bench',
           variant: pendingDrop.variant,
           position: finalPos,
           rotation: finalRot,
@@ -148,6 +148,7 @@ import { DxfRenderer } from './components/DxfRenderer';
 // import { BrutonLogo } from './components/BrutonLogo'; // Temporarily disabled
 
 function Scene() {
+  const { camera } = useThree();
   const modules = useConfiguratorStore((state) => state.modules);
   const selectModule = useConfiguratorStore((state) => state.selectModule);
   const selectedId = useConfiguratorStore((state) => state.selectedId);
@@ -164,7 +165,83 @@ function Scene() {
   const sunIntensity = useConfiguratorStore((state) => state.sunIntensity);
   // const setIsRotating = useConfiguratorStore((state) => state.setIsRotating); // Removed unused
   const modulesRef = useRef(modules);
+  const benchGroupRef = useRef<THREE.Group>(null);
+  const environmentGroupRef = useRef<THREE.Group>(null);
+  const groundGroupRef = useRef<THREE.Group>(null);
+  const grassGroupRef = useRef<THREE.Group>(null);
   modulesRef.current = modules;
+
+  const sunFactor = THREE.MathUtils.clamp(sunIntensity, 0, 1);
+  const ambientIntensity = THREE.MathUtils.lerp(
+    quality.lighting.ambientIntensity * 0.15,
+    quality.lighting.ambientIntensity,
+    sunFactor
+  );
+  const hemisphereIntensity = THREE.MathUtils.lerp(
+    quality.lighting.hemisphereIntensity * 0.2,
+    quality.lighting.hemisphereIntensity,
+    sunFactor
+  );
+  const directionalIntensity = quality.lighting.directionalIntensity * sunFactor;
+  const envFactor = sunFactor * sunFactor;
+  const environmentIntensity = THREE.MathUtils.lerp(
+    quality.environment.intensity * 0.05,
+    quality.environment.intensity,
+    envFactor
+  );
+  const environmentBlur = THREE.MathUtils.lerp(
+    quality.environment.blur * 1.2,
+    quality.environment.blur,
+    sunFactor
+  );
+  const contactShadowOpacity = quality.shadows.contactShadows.opacity * sunFactor;
+
+  const ambientColor = new THREE.Color('#1b2333').lerp(
+    new THREE.Color(lightingBase.ambient.color),
+    sunFactor
+  );
+  const hemisphereSkyColor = new THREE.Color('#2b3a55').lerp(
+    new THREE.Color(lightingBase.hemisphere.skyColor),
+    sunFactor
+  );
+  const hemisphereGroundColor = new THREE.Color('#0f131a').lerp(
+    new THREE.Color(lightingBase.hemisphere.groundColor),
+    sunFactor
+  );
+  const directionalColor = new THREE.Color('#9bb6ff').lerp(
+    new THREE.Color('#fff2d6'),
+    sunFactor
+  );
+  const fogColor = new THREE.Color(LIGHTING_CONFIG.fog.nightColor).lerp(
+    new THREE.Color(LIGHTING_CONFIG.fog.color),
+    sunFactor
+  );
+  const environmentPreset = quality.environment.preset;
+
+  useEffect(() => {
+    camera.layers.enable(LIGHTING_CONFIG.lamp.layer);
+  }, [camera]);
+
+  useEffect(() => {
+    const lampLayer = LIGHTING_CONFIG.lamp.layer;
+    const enableLamp = (obj: THREE.Object3D | null) => {
+      if (!obj) return;
+      obj.traverse((child) => {
+        child.layers.enable(lampLayer);
+      });
+    };
+    const disableLamp = (obj: THREE.Object3D | null) => {
+      if (!obj) return;
+      obj.traverse((child) => {
+        child.layers.disable(lampLayer);
+      });
+    };
+
+    enableLamp(benchGroupRef.current);
+    enableLamp(environmentGroupRef.current);
+    enableLamp(groundGroupRef.current);
+    disableLamp(grassGroupRef.current);
+  }, [modules, showGrass]);
 
   const handleRotate = (id: string, angle: number) => {
     // Rotation Snapping Logic
@@ -293,19 +370,20 @@ function Scene() {
   return (
     <>
       <ambientLight
-        intensity={quality.lighting.ambientIntensity}
-        color={lightingBase.ambient.color}
+        intensity={ambientIntensity}
+        color={ambientColor}
       />
 
       <hemisphereLight
-        intensity={quality.lighting.hemisphereIntensity}
-        color={lightingBase.hemisphere.skyColor}
-        groundColor={lightingBase.hemisphere.groundColor}
+        intensity={hemisphereIntensity}
+        color={hemisphereSkyColor}
+        groundColor={hemisphereGroundColor}
       />
 
       <directionalLight
         position={lightingBase.directional.position}
-        intensity={quality.lighting.directionalIntensity * sunIntensity}
+        intensity={directionalIntensity}
+        color={directionalColor}
         castShadow={quality.lighting.directionalCastsShadow}
         shadow-mapSize-width={quality.shadows.shadowMapSize}
         shadow-mapSize-height={quality.shadows.shadowMapSize}
@@ -317,24 +395,30 @@ function Scene() {
       />
       <InteractionManager />
 
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, -0.05, 0]}
-        receiveShadow
-        onPointerMove={handlePlanePointerMove}
-        onClick={(e) => {
-          if (!draggingId) {
-            e.stopPropagation();
-            selectModule(null);
-          }
-        }}
-      >
-        <planeGeometry args={[2000, 2000]} />
-        <meshStandardMaterial color="#888888" />
-      </mesh>
+      <group ref={groundGroupRef}>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.05, 0]}
+          receiveShadow
+          onPointerMove={handlePlanePointerMove}
+          onClick={(e) => {
+            if (!draggingId) {
+              e.stopPropagation();
+              selectModule(null);
+            }
+          }}
+        >
+          <planeGeometry args={[2000, 2000]} />
+          <meshStandardMaterial color="#888888" />
+        </mesh>
+      </group>
 
       {/* Visual Grass Patch */}
-      {showGrass && <Grass />}
+      {showGrass && (
+        <group ref={grassGroupRef}>
+          <Grass />
+        </group>
+      )}
 
       {/* Logo Branding - Hero View focal point */}
       {/* Temporarily disabled - code preserved for future use
@@ -348,9 +432,10 @@ function Scene() {
       {/* DXF/DWG Renderer - Imported CAD drawings */}
       <DxfRenderer />
 
-      {modules.map((module) => {
-        if (module.variant === 'tree' || module.variant === 'human') {
-          return (
+      <group ref={environmentGroupRef}>
+        {modules
+          .filter((module) => module.variant === 'tree' || module.variant === 'human' || module.variant === 'lamp')
+          .map((module) => (
             <EnvironmentObject
               key={module.id}
               {...module}
@@ -363,25 +448,28 @@ function Scene() {
               }}
               pointerEvents={draggingId === module.id ? 'none' : 'auto'}
             />
-          );
-        }
+          ))}
+      </group>
 
-        return (
-          <ConcreteBench
-            key={module.id}
-            {...module}
-            selected={selectedId === module.id}
-            onSelect={() => selectModule(module.id)}
-            onRotate={(angle) => handleRotate(module.id, angle)}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              selectModule(module.id);
-              setDraggingId(module.id);
-            }}
-            pointerEvents={draggingId === module.id ? 'none' : 'auto'}
-          />
-        );
-      })}
+      <group ref={benchGroupRef}>
+        {modules
+          .filter((module) => module.variant !== 'tree' && module.variant !== 'human' && module.variant !== 'lamp')
+          .map((module) => (
+            <ConcreteBench
+              key={module.id}
+              {...module}
+              selected={selectedId === module.id}
+              onSelect={() => selectModule(module.id)}
+              onRotate={(angle) => handleRotate(module.id, angle)}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                selectModule(module.id);
+                setDraggingId(module.id);
+              }}
+              pointerEvents={draggingId === module.id ? 'none' : 'auto'}
+            />
+          ))}
+      </group>
 
       <OrbitControls
         makeDefault
@@ -420,18 +508,18 @@ function Scene() {
       </GizmoHelper>
 
       <SkyGradient />
-      <fog attach="fog" args={['#dbe9f4', 10, 90]} />
+      <fog attach="fog" args={[fogColor, LIGHTING_CONFIG.fog.near, LIGHTING_CONFIG.fog.far]} />
       <Environment
-        preset={quality.environment.preset}
-        environmentIntensity={quality.environment.intensity}
-        blur={quality.environment.blur}
+        preset={environmentPreset}
+        environmentIntensity={environmentIntensity}
+        blur={environmentBlur}
       />
 
       {/* Contact Shadows - Only shown if enabled in quality profile */}
       {quality.shadows.contactShadowsEnabled && (
         <ContactShadows
           position={[0, -0.005, 0]}
-          opacity={quality.shadows.contactShadows.opacity}
+          opacity={contactShadowOpacity}
           scale={quality.shadows.contactShadows.scale}
           blur={quality.shadows.contactShadows.blur}
           resolution={quality.shadows.contactShadows.resolution}

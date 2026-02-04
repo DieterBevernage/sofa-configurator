@@ -1,3 +1,6 @@
+import { Face } from 'dxf-writer';
+import { withBase } from '../utils/assetPaths';
+
 export const GRASS_CONFIG = {
     // Population
     quantity: 1000000,
@@ -53,10 +56,12 @@ export const GRASS_CONFIG = {
     shadowIntensity: 0.6, // Stronger shadows at base
 
     // Ground Texture settings
-    groundTexturePath: '/Grass/ground.png',
+    groundTexturePath: withBase('Grass/ground.png'),
     groundTextureScale: 40.0,
     groundColor: '#445533', // Darker base color to prevent washed-out look
     groundRoughness: 1.0,   // Maximum roughness to prevent glare
     groundMetalness: 0.0,
-    groundEnvMapIntensity: 0.05, // Almost no environment reflections on ground
+    groundEnvMapIntensity: 0.01, // Almost no environment reflections on ground
+    receiveLampLightBlades: false,
+    receiveLampLightGround: true,
 };

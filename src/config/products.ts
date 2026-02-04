@@ -1,4 +1,5 @@
 import type { BenchVariant } from '../types';
+import { withBase } from '../utils/assetPaths';
 
 export interface ProductDefinition {
     id: BenchVariant;
@@ -8,7 +9,7 @@ export interface ProductDefinition {
     height: number;
     type: 'concrete' | 'glb';
     modelPath?: string; // Only for GLB
-    category: 'bench' | 'environment'; // environment items like tree/human
+    category: 'bench' | 'environment'; // environment items like tree/human/lamp
 }
 
 export const PRODUCTS: Record<string, ProductDefinition> = {
@@ -57,7 +58,7 @@ export const PRODUCTS: Record<string, ProductDefinition> = {
         depth: 0.5,
         height: 0.45,
         type: 'glb',
-        modelPath: '/Zitbanken/SF-S1.glb',
+        modelPath: withBase('zitbanken/sf-s1.glb'),
         category: 'bench'
     },
     'SF-S2': {
@@ -67,7 +68,7 @@ export const PRODUCTS: Record<string, ProductDefinition> = {
         depth: 0.5,
         height: 0.45,
         type: 'glb',
-        modelPath: '/Zitbanken/SF-S2.glb',
+        modelPath: withBase('zitbanken/sf-s2.glb'),
         category: 'bench'
     },
     // Environment
@@ -86,6 +87,15 @@ export const PRODUCTS: Record<string, ProductDefinition> = {
         width: 0.5,
         depth: 0.5,
         height: 1.8,
+        type: 'concrete', // placeholder type
+        category: 'environment'
+    },
+    'lamp': {
+        id: 'lamp',
+        label: 'Lantaarn',
+        width: 0.35,
+        depth: 0.35,
+        height: 3.2,
         type: 'concrete', // placeholder type
         category: 'environment'
     }
